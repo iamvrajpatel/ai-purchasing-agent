@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<header class="page-header">
+  <h1>Purchasing Dashboard</h1>
+  <p>Operational queue, agent activity, approvals, and validation outcomes.</p>
+</header>
+<section class="metrics">
+  <div><span>{{ summary.total_recommendations|default(0) }}</span>Total recommendations</div>
+  <div><span>{{ summary.pending_recommendations|default(0) }}</span>Pending recommendations</div>
+  <div><span>{{ summary.completed_agent_decisions|default(0) }}</span>Agent decisions</div>
+  <div><span>{{ summary.pending_approvals|default(0) }}</span>Pending approvals</div>
+  <div><span>{{ summary.escalations|default(0) }}</span>Escalations</div>
+</section>
+<section class="grid two">
+  <div>
+    <h2>Recent Purchase Orders</h2>
+    <table>
+      <thead><tr><th>ID</th><th>Status</th><th>Supplier</th><th>Amount</th></tr></thead>
+      <tbody>
+      {% for po in summary.recent_purchase_orders|default([]) %}
+        <tr><td><a href="/purchase-orders/{{ po.id }}">#{{ po.id }}</a></td><td>{{ po.status }}</td><td>{{ po.supplier_status or "PENDING" }}</td><td>{{ po.total_amount }}</td></tr>
+      {% else %}
+        <tr><td colspan="4">No purchase orders yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <h2>Agent Activity</h2>
+    <ol class="timeline">
+      {% for event in summary.recent_agent_activity|default([]) %}
+        <li><strong>{{ event.event_type }}</strong><span>{{ event.message }}</span></li>
+      {% else %}
+        <li>No recorded agent activity.</li>
+      {% endfor %}
+    </ol>
+  </div>
+</section>
+{% endblock %}
+

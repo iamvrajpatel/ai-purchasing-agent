@@ -1,0 +1,2 @@
+"""Frontend route modules."""
+

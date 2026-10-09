@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Purchase Order{% endblock %}
+{% block content %}
+{% if purchase_order %}
+<header class="page-header">
+  <h1>Purchase Order #{{ purchase_order.id }}</h1>
+  <p>{{ purchase_order.status }} / {{ purchase_order.supplier_confirmation_status or "PENDING" }}</p>
+</header>
+<section class="detail-band">
+  <div><span>Total</span><strong>{{ purchase_order.total_amount }}</strong></div>
+  <div><span>Delivery</span><strong>{{ purchase_order.expected_delivery_date }}</strong></div>
+  <div><span>External Ref</span><strong>{{ purchase_order.external_reference or "N/A" }}</strong></div>
+</section>
+<section>
+  <h2>Items</h2>
+  <table><thead><tr><th>Product</th><th>Quantity</th><th>Unit Price</th><th>Total</th></tr></thead><tbody>
+  {% for item in purchase_order["items"] %}
+    <tr><td>{{ item.product_id }}</td><td>{{ item.quantity }}</td><td>{{ item.unit_price }}</td><td>{{ item.line_total }}</td></tr>
+  {% endfor %}
+  </tbody></table>
+</section>
+<section>
+  <h2>Validations</h2>
+  <table><thead><tr><th>Type</th><th>Status</th><th>Errors</th></tr></thead><tbody>
+  {% for validation in purchase_order["validations"] %}
+    <tr><td>{{ validation.validation_type }}</td><td>{{ validation.status }}</td><td>{{ validation.errors or "" }}</td></tr>
+  {% else %}
+    <tr><td colspan="3">No validations recorded.</td></tr>
+  {% endfor %}
+  </tbody></table>
+</section>
+{% else %}
+<section class="alert">Purchase order not found.</section>
+{% endif %}
+{% endblock %}
+

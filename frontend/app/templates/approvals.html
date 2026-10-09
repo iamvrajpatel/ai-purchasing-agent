@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Approvals{% endblock %}
+{% block content %}
+<header class="page-header">
+  <h1>Approvals</h1>
+  <p>Review high-value or risky proposals before execution.</p>
+</header>
+<table>
+  <thead><tr><th>ID</th><th>Agent Run</th><th>Status</th><th>Action</th><th></th></tr></thead>
+  <tbody>
+  {% for approval in approvals %}
+    <tr>
+      <td>#{{ approval.id }}</td>
+      <td><a href="/agent/runs/{{ approval.agent_run_id }}">Run #{{ approval.agent_run_id }}</a></td>
+      <td>{{ approval.status }}</td>
+      <td>{{ approval.proposed_action_json.quantity }} units, {{ approval.proposed_action_json.total_amount }}</td>
+      <td>
+        {% if approval.status == "PENDING" %}
+        <button class="button primary approval-action" data-action="approve" data-id="{{ approval.id }}">Approve</button>
+        <button class="button ghost approval-action" data-action="reject" data-id="{{ approval.id }}">Reject</button>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5">No approval requests.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/approvals.js"></script>
+{% endblock %}
+

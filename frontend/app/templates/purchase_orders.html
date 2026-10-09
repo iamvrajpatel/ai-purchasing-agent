@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Purchase Orders{% endblock %}
+{% block content %}
+<header class="page-header">
+  <h1>Purchase Orders</h1>
+  <p>Internal orders, supplier confirmations, and validation states.</p>
+</header>
+<table>
+  <thead><tr><th>ID</th><th>Status</th><th>Supplier Status</th><th>Delivery</th><th>Amount</th></tr></thead>
+  <tbody>
+  {% for po in purchase_orders %}
+    <tr>
+      <td><a href="/purchase-orders/{{ po.id }}">#{{ po.id }}</a></td>
+      <td>{{ po.status }}</td>
+      <td>{{ po.supplier_confirmation_status or "PENDING" }}</td>
+      <td>{{ po.expected_delivery_date }}</td>
+      <td>{{ po.total_amount }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5">No purchase orders yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+

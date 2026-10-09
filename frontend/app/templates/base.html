@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}AI Purchasing Agent{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">AI Purchasing</div>
+    <nav>
+      <a class="{{ 'active' if active == 'dashboard' else '' }}" href="/">Dashboard</a>
+      <a class="{{ 'active' if active == 'recommendations' else '' }}" href="/recommendations">Recommendations</a>
+      <a class="{{ 'active' if active == 'approvals' else '' }}" href="/approvals">Approvals</a>
+      <a class="{{ 'active' if active == 'purchase-orders' else '' }}" href="/purchase-orders">Purchase Orders</a>
+    </nav>
+  </aside>
+  <main class="content">
+    {% block content %}{% endblock %}
+  </main>
+  <script src="/static/js/api.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
+

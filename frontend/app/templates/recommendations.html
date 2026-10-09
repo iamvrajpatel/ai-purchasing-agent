@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Recommendations{% endblock %}
+{% block content %}
+<header class="page-header">
+  <h1>Recommendations</h1>
+  <p>Review system recommendations and start an AI investigation.</p>
+</header>
+<table>
+  <thead><tr><th>Product</th><th>Warehouse</th><th>Quantity</th><th>Status</th><th>Created</th><th></th></tr></thead>
+  <tbody>
+    {% for rec in recommendations %}
+    <tr>
+      <td><strong>{{ rec.product_sku }}</strong><br>{{ rec.product_name }}</td>
+      <td>{{ rec.warehouse_name }}</td>
+      <td>{{ rec.recommended_quantity }}</td>
+      <td>{% with status=rec.status %}{% include "partials/status_badge.html" %}{% endwith %}</td>
+      <td>{{ rec.created_at[:10] }}</td>
+      <td><a class="button ghost" href="/recommendations/{{ rec.id }}">Open</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6">No recommendations found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+

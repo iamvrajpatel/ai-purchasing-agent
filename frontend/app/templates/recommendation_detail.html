@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Recommendation{% endblock %}
+{% block content %}
+{% if recommendation %}
+<header class="page-header">
+  <h1>{{ recommendation.product_sku }} Recommendation</h1>
+  <p>{{ recommendation.product_name }} for {{ recommendation.warehouse_name }}</p>
+</header>
+<section class="detail-band">
+  <div><span>Recommended</span><strong>{{ recommendation.recommended_quantity }}</strong></div>
+  <div><span>Status</span><strong>{{ recommendation.status }}</strong></div>
+  <div><span>Source</span><strong>{{ recommendation.recommendation_source }}</strong></div>
+</section>
+<div class="actions">
+  <button id="analyze-button" class="button primary" data-id="{{ recommendation.id }}">Analyze with AI</button>
+  <span id="action-status" class="muted"></span>
+</div>
+<section id="analysis-error" class="alert hidden"></section>
+{% else %}
+<section class="alert">Recommendation not found.</section>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/recommendations.js"></script>
+{% endblock %}
+

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Agent Analysis{% endblock %}
+{% block content %}
+{% if run %}
+<header class="page-header">
+  <h1>Agent Run #{{ run.id }}</h1>
+  <p>Recommendation #{{ run.recommendation_id }}{% if run.error_message %}: {{ run.error_message }}{% endif %}</p>
+</header>
+<section class="detail-band">
+  <div><span>State</span><strong>{{ run.status }}</strong></div>
+  <div><span>Decision</span><strong>{{ run.decision or "N/A" }}</strong></div>
+  <div><span>Quantity</span><strong>{{ run.original_quantity }}{% if run.proposed_quantity %} → {{ run.proposed_quantity }}{% endif %}</strong></div>
+</section>
+{% if run.structured_decision %}
+<section>
+  <h2>Decision Detail</h2>
+  <p>{{ run.structured_decision.reasoning }}</p>
+  <div class="grid two">
+    <div>
+      <h3>Evidence</h3>
+      <ul>{% for item in run.structured_decision.evidence %}<li>{{ item }}</li>{% endfor %}</ul>
+    </div>
+    <div>
+      <h3>Risks</h3>
+      <ul>{% for item in run.structured_decision.risks %}<li>{{ item }}</li>{% else %}<li>No material risks recorded.</li>{% endfor %}</ul>
+    </div>
+  </div>
+</section>
+{% endif %}
+<section>
+  <h2>Investigation Timeline</h2>
+  <ol class="timeline">
+    {% for event in run.events %}
+      <li><strong>{{ event.event_type }}</strong><span>{{ event.message }}</span></li>
+    {% else %}
+      <li>No events recorded.</li>
+    {% endfor %}
+  </ol>
+</section>
+<section>
+  <h2>Tool Calls</h2>
+  <table>
+    <thead><tr><th>Tool</th><th>Status</th><th>Duration</th></tr></thead>
+    <tbody>
+      {% for call in run.tool_calls %}
+      <tr><td>{{ call.tool_name }}</td><td>{{ "OK" if call.success else "FAILED" }}</td><td>{{ call.duration_ms }}ms</td></tr>
+      {% else %}
+      <tr><td colspan="3">No tool calls recorded.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% if run.status in ["PROPOSED", "APPROVED", "VALIDATION_FAILED"] %}
+<button class="button primary" id="execute-button" data-id="{{ run.id }}">Execute Approved Order</button>
+<span id="execute-status" class="muted"></span>
+{% endif %}
+{% else %}
+<section class="alert">Agent run not found.</section>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/agent.js"></script>
+{% endblock %}
+
