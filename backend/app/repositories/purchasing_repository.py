@@ -106,8 +106,23 @@ class PurchasingRepository:
     def approvals(self) -> list[ApprovalRequest]:
         return list(self.db.scalars(select(ApprovalRequest).order_by(ApprovalRequest.created_at.desc())))
 
+    def approvals_for_run(self, run_id: int) -> list[ApprovalRequest]:
+        return list(self.db.scalars(select(ApprovalRequest).where(ApprovalRequest.agent_run_id == run_id).order_by(ApprovalRequest.id)))
+
+    def approved_approvals_for_run(self, run_id: int) -> list[ApprovalRequest]:
+        return list(
+            self.db.scalars(
+                select(ApprovalRequest)
+                .where(ApprovalRequest.agent_run_id == run_id, ApprovalRequest.status == "APPROVED")
+                .order_by(ApprovalRequest.id)
+            )
+        )
+
     def pending_approval_for_run(self, run_id: int) -> ApprovalRequest | None:
         return self.db.scalar(select(ApprovalRequest).where(ApprovalRequest.agent_run_id == run_id, ApprovalRequest.status == "PENDING"))
+
+    def pending_approvals_for_run(self, run_id: int) -> list[ApprovalRequest]:
+        return list(self.db.scalars(select(ApprovalRequest).where(ApprovalRequest.agent_run_id == run_id, ApprovalRequest.status == "PENDING")))
 
     @staticmethod
     def budget_period_for(day: date) -> str:

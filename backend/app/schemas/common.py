@@ -37,6 +37,8 @@ class DashboardSummary(BaseModel):
     escalations: int
     recent_purchase_orders: list[dict]
     recent_agent_activity: list[dict]
+    budgets: list[dict] = Field(default_factory=list)
+    pending_approval_exposure: list[dict] = Field(default_factory=list)
 
 
 class DateRange(BaseModel):

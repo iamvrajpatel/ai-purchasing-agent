@@ -6,6 +6,7 @@ from app.models.inventory import Inventory
 from app.models.product import Product
 from app.models.purchase_order import PurchaseOrder, PurchaseOrderItem
 from app.models.recommendation import PurchaseRecommendation
+from app.models.recovery import PurchaseOrderRecoveryCase
 from app.models.supplier import Supplier, SupplierProduct
 from app.models.warehouse import Warehouse
 
@@ -21,6 +22,7 @@ __all__ = [
     "Product",
     "PurchaseOrder",
     "PurchaseOrderItem",
+    "PurchaseOrderRecoveryCase",
     "PurchaseRecommendation",
     "PurchasingBudget",
     "Supplier",

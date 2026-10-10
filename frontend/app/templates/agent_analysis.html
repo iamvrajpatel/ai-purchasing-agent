@@ -25,6 +25,37 @@
       <ul>{% for item in run.structured_decision.risks %}<li>{{ item }}</li>{% else %}<li>No material risks recorded.</li>{% endfor %}</ul>
     </div>
   </div>
+  {% if run.structured_decision.constraint_result %}
+  <h3>Constraint Proof</h3>
+  <table>
+    <thead><tr><th>Check</th><th>Status</th><th>Details</th></tr></thead>
+    <tbody>
+      {% for check in run.structured_decision.constraint_result.checks %}
+      <tr><td>{{ check.name }}</td><td>{{ check.status }}</td><td>{{ check.details }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endif %}
+{% if run.proposed_actions %}
+<section>
+  <h2>Proposed Supplier Split</h2>
+  <table>
+    <thead><tr><th>Product</th><th>Supplier</th><th>Quantity</th><th>Unit Price</th><th>Total</th><th>Delivery</th></tr></thead>
+    <tbody>
+      {% for action in run.proposed_actions %}
+      <tr>
+        <td>#{{ action.product_id }} {{ action.product_sku or "" }}<br>{{ action.product_name or "" }}</td>
+        <td>#{{ action.supplier_id }} {{ action.supplier_name or "" }}</td>
+        <td>{{ action.quantity }}</td>
+        <td>{{ action.unit_price }}</td>
+        <td>{{ action.total_amount }}</td>
+        <td>{{ action.expected_delivery_date }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </section>
 {% endif %}
 <section>
@@ -51,7 +82,7 @@
   </table>
 </section>
 {% if run.status in ["PROPOSED", "APPROVED", "VALIDATION_FAILED"] %}
-<button class="button primary" id="execute-button" data-id="{{ run.id }}">Execute Approved Order</button>
+<button class="button primary" id="execute-button" data-id="{{ run.id }}">Execute Approved Orders</button>
 <span id="execute-status" class="muted"></span>
 {% endif %}
 {% else %}

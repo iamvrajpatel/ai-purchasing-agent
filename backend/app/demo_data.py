@@ -299,12 +299,21 @@ def _seed_open_purchase_orders(
 ) -> None:
     specs = [
         ("seed-incoming-sku101-150", "bright", "NORTH-AHD", "SKU-101", 150, "54.00", 1, "CONFIRMED"),
+        ("seed-scenario2-sku101-partial", "partial", "NORTH-AHD", "SKU-101", 500, "49.00", 3, "PARTIALLY_CONFIRMED"),
         ("seed-late-sku103-300", "bright", "NORTH-AHD", "SKU-103", 300, "42.00", 12, "CONFIRMED"),
         ("seed-west-sku107-100", "bright", "WEST-MUM", "SKU-107", 100, "160.00", 5, "CONFIRMED"),
         ("seed-south-sku104-80", "metro", "SOUTH-BLR", "SKU-104", 80, "620.00", 4, "PENDING"),
+        ("seed-scenario2-sku110-blocked", "bright", "NORTH-AHD", "SKU-110", 500, "480.00", 8, "PARTIALLY_CONFIRMED"),
     ]
     for idem, supplier_code, warehouse_code, sku, qty, unit_price, days, supplier_status in specs:
         total = Decimal(qty) * Decimal(unit_price)
+        confirmed_quantity = qty
+        status = "OPEN"
+        if supplier_status == "PENDING":
+            confirmed_quantity = None
+        elif supplier_status == "PARTIALLY_CONFIRMED":
+            confirmed_quantity = qty // 2
+            status = "VALIDATION_FAILED"
         order = upsert_one(
             db,
             PurchaseOrder,
@@ -312,9 +321,14 @@ def _seed_open_purchase_orders(
             {
                 "supplier_id": suppliers[supplier_code].id,
                 "warehouse_id": warehouses[warehouse_code].id,
-                "status": "OPEN",
+                "status": status,
                 "supplier_confirmation_status": supplier_status,
-                "supplier_response_json": {"status": supplier_status, "confirmed_quantity": qty if supplier_status == "CONFIRMED" else None},
+                "supplier_response_json": {
+                    "status": supplier_status,
+                    "requested_quantity": qty,
+                    "confirmed_quantity": confirmed_quantity,
+                    "demo_note": "Scenario 2 partial supplier fulfillment" if supplier_status == "PARTIALLY_CONFIRMED" else None,
+                },
                 "expected_delivery_date": today + timedelta(days=days),
                 "total_amount": total,
                 "source_recommendation_id": None,

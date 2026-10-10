@@ -10,18 +10,27 @@ class ValidationService:
     def __init__(self, db: Session):
         self.db = db
 
-    def validate_decision(self, agent_run_id: int, decision: PurchasingDecision, proposed_action: ProposedAction | None) -> AgentValidation:
+    def validate_decision(
+        self,
+        agent_run_id: int,
+        decision: PurchasingDecision,
+        proposed_action: ProposedAction | None,
+        proposed_actions: list[ProposedAction] | None = None,
+    ) -> AgentValidation:
         errors: list[dict] = []
+        actions = proposed_actions or ([proposed_action] if proposed_action else [])
         checks = {
             "decision": decision.decision,
             "has_reasoning": bool(decision.reasoning),
             "has_evidence": bool(decision.evidence),
             "constraint_valid": decision.constraint_result.valid if decision.constraint_result else None,
+            "proposed_action_count": len(actions),
         }
-        if decision.decision in {"ACCEPT", "MODIFY"} and not proposed_action:
+        if decision.decision in {"ACCEPT", "MODIFY"} and not actions:
             errors.append({"code": "MISSING_PROPOSED_ACTION", "message": "Executable decision has no proposed action"})
-        if proposed_action and proposed_action.quantity <= 0:
-            errors.append({"code": "INVALID_QUANTITY", "message": "Proposed quantity must be positive"})
+        for action in actions:
+            if action.quantity <= 0:
+                errors.append({"code": "INVALID_QUANTITY", "message": "Proposed quantity must be positive"})
         if decision.constraint_result and not decision.constraint_result.valid:
             errors.append({"code": "CONSTRAINT_FAILURE", "message": "Mandatory constraints did not pass"})
 

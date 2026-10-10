@@ -6,23 +6,42 @@
   <p>Review high-value or risky proposals before execution.</p>
 </header>
 <table>
-  <thead><tr><th>ID</th><th>Agent Run</th><th>Status</th><th>Action</th><th></th></tr></thead>
+  <thead><tr><th>ID</th><th>Agent Run</th><th>Status</th><th>Proposal</th><th>Execution</th><th></th></tr></thead>
   <tbody>
   {% for approval in approvals %}
     <tr>
       <td>#{{ approval.id }}</td>
       <td><a href="/agent/runs/{{ approval.agent_run_id }}">Run #{{ approval.agent_run_id }}</a></td>
       <td>{{ approval.status }}</td>
-      <td>{{ approval.proposed_action_json.quantity }} units, {{ approval.proposed_action_json.total_amount }}</td>
+      <td>
+        <strong>#{{ approval.proposed_action_json.product_id }} {{ approval.proposed_action_json.product_sku or "" }}</strong>
+        {{ approval.proposed_action_json.product_name or "" }}<br>
+        Supplier #{{ approval.proposed_action_json.supplier_id }} {{ approval.proposed_action_json.supplier_name or "" }}<br>
+        Warehouse #{{ approval.proposed_action_json.warehouse_id }} {{ approval.proposed_action_json.warehouse_name or "" }}<br>
+        {{ approval.proposed_action_json.quantity }} units × {{ approval.proposed_action_json.unit_price }} = {{ approval.proposed_action_json.total_amount }}<br>
+        Delivery {{ approval.proposed_action_json.expected_delivery_date }}
+      </td>
+      <td>
+        {% if approval.proposed_action_json.purchase_order_id %}
+          {{ approval.proposed_action_json.execution_status or "EXECUTED" }}<br>
+          <a href="/purchase-orders/{{ approval.proposed_action_json.purchase_order_id }}">PO #{{ approval.proposed_action_json.purchase_order_id }}</a>
+        {% else %}
+          Not executed
+        {% endif %}
+      </td>
       <td>
         {% if approval.status == "PENDING" %}
         <button class="button primary approval-action" data-action="approve" data-id="{{ approval.id }}">Approve</button>
         <button class="button ghost approval-action" data-action="reject" data-id="{{ approval.id }}">Reject</button>
+        {% elif approval.status == "APPROVED" and not approval.proposed_action_json.purchase_order_id %}
+        <button class="button primary approval-action" data-action="execute" data-id="{{ approval.id }}">Execute</button>
+        {% elif approval.proposed_action_json.purchase_order_id %}
+        <a class="button ghost" href="/purchase-orders/{{ approval.proposed_action_json.purchase_order_id }}">Open PO</a>
         {% endif %}
       </td>
     </tr>
   {% else %}
-    <tr><td colspan="5">No approval requests.</td></tr>
+    <tr><td colspan="6">No approval requests.</td></tr>
   {% endfor %}
   </tbody>
 </table>

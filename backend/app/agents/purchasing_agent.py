@@ -77,21 +77,23 @@ class PurchasingAgent:
 
             final = await client.chat(messages + [{"role": "user", "content": FINAL_DECISION_INSTRUCTIONS}], tools=None)
             llm_decision = PurchasingDecision.model_validate(parse_json_object(final.get("content") or "{}"))
-            deterministic_decision, proposed_action = DecisionEngine(self.db).decide_for_recommendation(recommendation_id)
+            deterministic_decision, proposed_actions = DecisionEngine(self.db).decide_actions_for_recommendation(recommendation_id)
+            proposed_action = proposed_actions[0] if proposed_actions else None
             final_decision = self._validated_decision(llm_decision, deterministic_decision)
             run.status = "DECIDED"
             run.decision = final_decision.decision
             run.proposed_quantity = final_decision.proposed_quantity
-            run.proposed_supplier_id = final_decision.supplier_id
+            run.proposed_supplier_id = final_decision.supplier_id or (proposed_action.supplier_id if len(proposed_actions) == 1 and proposed_action else None)
             run.reasoning = final_decision.reasoning
             run.evidence_snapshot = {
                 "llm_decision": llm_decision.model_dump(mode="json"),
                 "server_validated_decision": final_decision.model_dump(mode="json"),
                 "proposed_action": proposed_action.model_dump(mode="json") if proposed_action else None,
+                "proposed_actions": [action.model_dump(mode="json") for action in proposed_actions],
             }
-            ValidationService(self.db).validate_decision(run.id, final_decision, proposed_action)
-            if proposed_action:
-                ApprovalService(self.db).ensure_approval_path(run.id, proposed_action, final_decision.requires_approval)
+            ValidationService(self.db).validate_decision(run.id, final_decision, proposed_action, proposed_actions)
+            if proposed_actions:
+                ApprovalService(self.db).ensure_approval_paths(run.id, proposed_actions, final_decision.requires_approval)
                 run.status = "AWAITING_APPROVAL" if final_decision.requires_approval else "PROPOSED"
             elif final_decision.decision == "REJECT":
                 run.status = "REJECTED"

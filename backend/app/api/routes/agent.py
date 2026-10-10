@@ -35,6 +35,9 @@ def get_run(run_id: int, db: Session = Depends(get_db)):
     detail = AgentRunDetail.model_validate(run)
     if run.evidence_snapshot and run.evidence_snapshot.get("server_validated_decision"):
         detail.structured_decision = PurchasingDecision.model_validate(run.evidence_snapshot["server_validated_decision"])
+        detail.proposed_actions = run.evidence_snapshot.get("proposed_actions") or (
+            [run.evidence_snapshot["proposed_action"]] if run.evidence_snapshot.get("proposed_action") else []
+        )
     return detail
 
 
@@ -56,7 +59,14 @@ def get_run_validations(run_id: int, db: Session = Depends(get_db)):
 
 @router.post("/runs/{run_id}/execute")
 def execute_run(run_id: int, db: Session = Depends(get_db)):
-    purchase_order = PurchaseOrderService(db).execute_agent_run(run_id)
+    purchase_orders = PurchaseOrderService(db).execute_agent_run_orders(run_id)
     db.commit()
-    return {"purchase_order_id": purchase_order.id, "status": purchase_order.status}
+    return {
+        "purchase_orders": [
+            {"purchase_order_id": purchase_order.id, "status": purchase_order.status}
+            for purchase_order in purchase_orders
+        ],
+        "purchase_order_id": purchase_orders[0].id if purchase_orders else None,
+        "status": purchase_orders[0].status if purchase_orders else None,
+    }
 

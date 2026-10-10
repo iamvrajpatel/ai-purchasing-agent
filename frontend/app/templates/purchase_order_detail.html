@@ -11,6 +11,14 @@
   <div><span>Delivery</span><strong>{{ purchase_order.expected_delivery_date }}</strong></div>
   <div><span>External Ref</span><strong>{{ purchase_order.external_reference or "N/A" }}</strong></div>
 </section>
+{% set supplier_response = purchase_order.supplier_response_json or {} %}
+{% if supplier_response %}
+<section class="detail-band">
+  <div><span>Requested</span><strong>{{ supplier_response.requested_quantity or "N/A" }}</strong></div>
+  <div><span>Confirmed</span><strong>{{ supplier_response.confirmed_quantity if supplier_response.confirmed_quantity is not none else "N/A" }}</strong></div>
+  <div><span>Shortfall</span><strong>{% if supplier_response.requested_quantity and supplier_response.confirmed_quantity is not none %}{{ supplier_response.requested_quantity - supplier_response.confirmed_quantity }}{% else %}N/A{% endif %}</strong></div>
+</section>
+{% endif %}
 <section>
   <h2>Items</h2>
   <table><thead><tr><th>Product</th><th>Quantity</th><th>Unit Price</th><th>Total</th></tr></thead><tbody>
@@ -29,8 +37,52 @@
   {% endfor %}
   </tbody></table>
 </section>
+<section>
+  <h2>Recovery</h2>
+  {% set recovery = purchase_order.recovery_case %}
+  {% if purchase_order.supplier_confirmation_status in ["PARTIALLY_CONFIRMED", "REJECTED"] %}
+  <button class="button primary" id="analyze-recovery-button" data-id="{{ purchase_order.id }}">Analyze Recovery</button>
+  <span id="recovery-status" class="muted"></span>
+  {% endif %}
+  {% if recovery %}
+  <div class="detail-band">
+    <div><span>Status</span><strong>{{ recovery.status }}</strong></div>
+    <div><span>Decision</span><strong>{{ recovery.decision or "N/A" }}</strong></div>
+    <div><span>Shortfall</span><strong>{{ recovery.shortfall_quantity }}</strong></div>
+  </div>
+  <p>{{ recovery.reasoning or "" }}</p>
+  {% if recovery.proposed_action %}
+  <div class="detail-band">
+    <div><span>Supplier</span><strong>{{ recovery.proposed_action.supplier_id }}</strong></div>
+    <div><span>Quantity</span><strong>{{ recovery.proposed_action.quantity }}</strong></div>
+    <div><span>Total</span><strong>{{ recovery.proposed_action.total_amount }}</strong></div>
+  </div>
+  {% endif %}
+  {% if recovery.risks %}
+  <h3>Risks</h3>
+  <ul>{% for risk in recovery.risks %}<li>{{ risk }}</li>{% endfor %}</ul>
+  {% endif %}
+  {% if recovery.missing_information %}
+  <h3>Missing Information</h3>
+  <ul>{% for item in recovery.missing_information %}<li>{{ item }}</li>{% endfor %}</ul>
+  {% endif %}
+  {% if recovery.status == "PENDING_APPROVAL" %}
+  <button class="button primary" id="approve-recovery-button" data-id="{{ recovery.id }}">Approve Recovery</button>
+  {% elif recovery.status == "APPROVED" %}
+  <button class="button primary" id="execute-recovery-button" data-id="{{ recovery.id }}">Execute Supplemental PO</button>
+  {% endif %}
+  {% if recovery.supplemental_purchase_order_id %}
+  <p><a href="/purchase-orders/{{ recovery.supplemental_purchase_order_id }}">Open supplemental purchase order #{{ recovery.supplemental_purchase_order_id }}</a></p>
+  {% endif %}
+  {% else %}
+  <p class="muted">No recovery analysis recorded.</p>
+  {% endif %}
+</section>
 {% else %}
 <section class="alert">Purchase order not found.</section>
 {% endif %}
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/purchase_orders.js"></script>
 {% endblock %}
 

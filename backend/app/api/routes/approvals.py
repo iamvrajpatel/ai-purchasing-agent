@@ -6,6 +6,7 @@ from app.core.database import get_db
 from app.repositories.purchasing_repository import PurchasingRepository
 from app.schemas.purchase_order import ApprovalRead
 from app.services.approval_service import ApprovalService
+from app.services.purchase_order_service import PurchaseOrderService
 
 router = APIRouter(prefix="/approvals", tags=["approvals"])
 
@@ -33,4 +34,11 @@ def reject(approval_id: int, buyer: str = Depends(buyer_identity), db: Session =
     db.commit()
     db.refresh(approval)
     return approval
+
+
+@router.post("/{approval_id}/execute")
+def execute_approval(approval_id: int, db: Session = Depends(get_db)):
+    purchase_order = PurchaseOrderService(db).execute_approval(approval_id)
+    db.commit()
+    return {"approval_id": approval_id, "purchase_order_id": purchase_order.id, "status": purchase_order.status}
 

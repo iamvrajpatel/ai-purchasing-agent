@@ -20,6 +20,7 @@ def test_budget_restriction_blocks_execution(db_session, scenario_one):
 
     assert result.valid is False
     assert any(v.code == "BUDGET_EXCEEDED" for v in result.violations)
+    assert any("exceeds available budget" in check.details and "by" in check.details for check in result.checks)
 
 
 def test_moq_violation_blocks_purchase(db_session, scenario_one):
@@ -52,6 +53,23 @@ def test_storage_restriction_blocks_purchase(db_session, scenario_one):
 
     assert result.valid is False
     assert any(v.code == "STORAGE_CAPACITY_EXCEEDED" for v in result.violations)
+    assert any("exceeds capacity" in check.details and "by" in check.details for check in result.checks)
+
+
+def test_late_delivery_proof_includes_delayed_days(db_session, scenario_one):
+    from datetime import date
+
+    result = ConstraintEngine(db_session).evaluate(
+        scenario_one["product"].id,
+        scenario_one["warehouse"].id,
+        scenario_one["supplier"].id,
+        650,
+        required_by=date.today(),
+    )
+
+    assert result.valid is False
+    assert any(v.code == "LATE_DELIVERY" for v in result.violations)
+    assert any("day(s) after required" in check.details for check in result.checks)
 
 
 def test_storage_snapshot_uses_volume_not_raw_units(db_session, scenario_one):

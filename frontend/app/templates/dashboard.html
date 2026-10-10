@@ -12,6 +12,43 @@
   <div><span>{{ summary.pending_approvals|default(0) }}</span>Pending approvals</div>
   <div><span>{{ summary.escalations|default(0) }}</span>Escalations</div>
 </section>
+<section>
+  <h2>Budget Health</h2>
+  <table>
+    <thead><tr><th>Warehouse</th><th>Period</th><th>Total</th><th>Committed</th><th>Reserved</th><th>Available</th><th>Used</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for budget in summary.budgets|default([]) %}
+      <tr>
+        <td>#{{ budget.warehouse_id }} {{ budget.warehouse_name or "" }}</td>
+        <td>{{ budget.budget_period }}</td>
+        <td>{{ budget.total_budget }}</td>
+        <td>{{ budget.committed_amount }}</td>
+        <td>{{ budget.reserved_amount }}</td>
+        <td>{{ budget.available_budget }}</td>
+        <td>{{ "%.1f"|format(budget.percent_used) }}%</td>
+        <td>{{ budget.status }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="8">No budget records available.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <h3>Pending Approval Exposure</h3>
+  <table>
+    <thead><tr><th>Warehouse</th><th>Pending approvals</th><th>Pending total</th></tr></thead>
+    <tbody>
+    {% for exposure in summary.pending_approval_exposure|default([]) %}
+      <tr>
+        <td>#{{ exposure.warehouse_id }} {{ exposure.warehouse_name or "" }}</td>
+        <td>{{ exposure.pending_count }}</td>
+        <td>{{ exposure.pending_total }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="3">No pending approval exposure.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
 <section class="grid two">
   <div>
     <h2>Recent Purchase Orders</h2>
