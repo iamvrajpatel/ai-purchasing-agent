@@ -67,4 +67,5 @@ class AgentRunDetail(AgentRunRead):
     events: list[AgentEventRead] = []
     validations: list[AgentValidationRead] = []
     structured_decision: PurchasingDecision | None = None
+    proposed_actions: list[dict] = []
 

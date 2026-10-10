@@ -76,8 +76,12 @@ class SupplierCondition(BaseModel):
 class ProposedAction(BaseModel):
     recommendation_id: int
     product_id: int
+    product_sku: str | None = None
+    product_name: str | None = None
     warehouse_id: int
+    warehouse_name: str | None = None
     supplier_id: int
+    supplier_name: str | None = None
     quantity: int
     unit_price: Decimal
     total_amount: Decimal

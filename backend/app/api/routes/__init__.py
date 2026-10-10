@@ -11,4 +11,5 @@ api_router.include_router(recommendations.router)
 api_router.include_router(agent.router)
 api_router.include_router(approvals.router)
 api_router.include_router(purchase_orders.router)
+api_router.include_router(purchase_orders.recovery_router)
 

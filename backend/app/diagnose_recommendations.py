@@ -64,10 +64,14 @@ def diagnose_recommendations() -> None:
                     f"  supplier={option.supplier_name}, quantity={quantity}, valid={result.valid}, "
                     f"failed={failed or 'none'}"
                 )
-            decision, action = decisions.decide_for_recommendation(recommendation.id)
+            decision, actions = decisions.decide_actions_for_recommendation(recommendation.id)
             print(f"  decision={decision.decision}, proposed_quantity={decision.proposed_quantity}, risks={decision.risks}")
-            if action:
-                print(f"  action supplier_id={action.supplier_id}, quantity={action.quantity}, total={action.total_amount}")
+            for action in actions:
+                print(
+                    f"  action product={action.product_sku} {action.product_name} (id={action.product_id}), "
+                    f"supplier={action.supplier_name} (id={action.supplier_id}), "
+                    f"quantity={action.quantity}, total={action.total_amount}"
+                )
     except OperationalError as exc:
         print("Could not connect to PostgreSQL.")
         print(f"Configured DATABASE_URL: {_safe_database_url()}")

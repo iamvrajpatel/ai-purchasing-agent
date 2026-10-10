@@ -43,8 +43,10 @@ class ConstraintEngine:
         if budget and total_cost <= budget.available_budget:
             checks.append(CheckResult(name="budget", status="PASS", details="Purchase is within available budget", metadata={"cost": str(total_cost), "available": str(budget.available_budget)}))
         elif budget:
-            checks.append(CheckResult(name="budget", status="FAIL", details="Purchase exceeds available budget", metadata={"cost": str(total_cost), "available": str(budget.available_budget)}))
-            violations.append(ConstraintViolation(code="BUDGET_EXCEEDED", severity="BLOCKING", message="Purchase exceeds available budget"))
+            over_by = money(total_cost - budget.available_budget)
+            details = f"Purchase cost {total_cost} exceeds available budget {budget.available_budget} by {over_by}"
+            checks.append(CheckResult(name="budget", status="FAIL", details=details, metadata={"cost": str(total_cost), "available": str(budget.available_budget), "over_by": str(over_by)}))
+            violations.append(ConstraintViolation(code="BUDGET_EXCEEDED", severity="BLOCKING", message=details))
         else:
             checks.append(CheckResult(name="budget", status="UNKNOWN", details="Budget record is missing"))
             violations.append(ConstraintViolation(code="BUDGET_UNKNOWN", severity="BLOCKING", message="Budget could not be verified"))
@@ -64,15 +66,19 @@ class ConstraintEngine:
         if quantity <= supplier_product.available_quantity:
             checks.append(CheckResult(name="supplier_availability", status="PASS", details="Supplier has sufficient available quantity"))
         else:
-            checks.append(CheckResult(name="supplier_availability", status="FAIL", details="Supplier cannot fulfill quantity"))
-            violations.append(ConstraintViolation(code="SUPPLIER_AVAILABILITY_SHORTAGE", severity="BLOCKING", message="Supplier capacity is insufficient"))
+            shortfall = quantity - supplier_product.available_quantity
+            details = f"Requested {quantity}, available {supplier_product.available_quantity}, shortfall {shortfall}"
+            checks.append(CheckResult(name="supplier_availability", status="FAIL", details=details, metadata={"requested": quantity, "available": supplier_product.available_quantity, "shortfall": shortfall}))
+            violations.append(ConstraintViolation(code="SUPPLIER_AVAILABILITY_SHORTAGE", severity="BLOCKING", message=details))
 
         expected_delivery = today + timedelta(days=supplier_product.lead_time_days)
         if required_by is None or expected_delivery <= required_by:
             checks.append(CheckResult(name="delivery_timing", status="PASS", details="Supplier can deliver by required date", metadata={"expected_delivery_date": expected_delivery.isoformat()}))
         else:
-            checks.append(CheckResult(name="delivery_timing", status="FAIL", details="Supplier delivery is later than required date", metadata={"expected_delivery_date": expected_delivery.isoformat(), "required_by": required_by.isoformat()}))
-            violations.append(ConstraintViolation(code="LATE_DELIVERY", severity="BLOCKING", message="Supplier cannot deliver before required date"))
+            delayed_days = (expected_delivery - required_by).days
+            details = f"Expected {expected_delivery.isoformat()} is {delayed_days} day(s) after required {required_by.isoformat()}"
+            checks.append(CheckResult(name="delivery_timing", status="FAIL", details=details, metadata={"expected_delivery_date": expected_delivery.isoformat(), "required_by": required_by.isoformat(), "delayed_days": delayed_days}))
+            violations.append(ConstraintViolation(code="LATE_DELIVERY", severity="BLOCKING", message=details))
 
         if product and warehouse:
             current_occupancy = self.inventory_repo.current_warehouse_occupied_volume(warehouse_id)
@@ -91,19 +97,22 @@ class ConstraintEngine:
                     )
                 )
             else:
+                over_by = Decimal(current_occupancy) + order_volume - warehouse.total_storage_capacity
+                details = f"Projected volume {Decimal(current_occupancy) + order_volume} exceeds capacity {warehouse.total_storage_capacity} by {over_by}"
                 checks.append(
                     CheckResult(
                         name="storage",
                         status="FAIL",
-                        details="Projected storage capacity exceeded",
+                        details=details,
                         metadata={
                             "current_occupied_volume": str(current_occupancy),
                             "order_volume": str(order_volume),
                             "capacity": str(warehouse.total_storage_capacity),
+                            "over_by": str(over_by),
                         },
                     )
                 )
-                violations.append(ConstraintViolation(code="STORAGE_CAPACITY_EXCEEDED", severity="BLOCKING", message="Order exceeds warehouse capacity"))
+                violations.append(ConstraintViolation(code="STORAGE_CAPACITY_EXCEEDED", severity="BLOCKING", message=details))
         else:
             checks.append(CheckResult(name="storage", status="UNKNOWN", details="Storage cannot be verified"))
             violations.append(ConstraintViolation(code="STORAGE_UNKNOWN", severity="BLOCKING", message="Storage could not be verified"))

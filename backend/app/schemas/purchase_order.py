@@ -3,6 +3,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
 
+from app.schemas.recovery import RecoveryCaseDetail
+
 
 class ApprovalRead(BaseModel):
     id: int
@@ -48,4 +50,5 @@ class PurchaseOrderDetail(PurchaseOrderRead):
     supplier_response_json: dict | None
     items: list[PurchaseOrderItemRead]
     validations: list[dict] = []
+    recovery_case: RecoveryCaseDetail | None = None
 
